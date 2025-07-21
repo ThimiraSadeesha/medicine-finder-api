@@ -20,7 +20,7 @@ var (
 )
 
 func init() {
-	// Load .env file
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("No .env file found, falling back to environment variables")

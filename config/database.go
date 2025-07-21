@@ -4,52 +4,61 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 	"log"
-	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
+// SqlClient Configurations for the database connection
 type SqlClient struct {
-	db *sql.DB
+	db     *sql.DB
+	GormDB *gorm.DB
 }
 
-func mySQLConnector(ctx context.Context, dbType, host, port, username, password, dbName string) (*SqlClient, error) {
-	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4",
-		username, password, host, port, dbName)
+func NewClientFromConfig(ctx context.Context) (*SqlClient, error) {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
+		DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME)
 
-	//log.Printf("Connecting to MySQL ")
-
-	db, err := sql.Open(dbType, connectionString)
+	sqlDB, err := sql.Open(DB_TYPE, dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create sql connection: %w", err)
 	}
 
-	if err := db.PingContext(ctx); err != nil {
-		return nil, fmt.Errorf("failed to connect to sql: %w", err)
+	if err := sqlDB.PingContext(ctx); err != nil {
+		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	log.Println("Connected to database successfully.")
-
-	return &SqlClient{db: db}, nil
-}
-
-// NewClientFromConfig creates a new SqlClient using package config variables
-func NewClientFromConfig(ctx context.Context) (*SqlClient, error) {
-	return mySQLConnector(ctx, DB_TYPE, DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME)
-}
-
-// GetDatabaseDetails returns the MySQL version string
-func (client *SqlClient) GetDatabaseDetails() string {
-	var result string
-	err := client.db.QueryRowContext(context.Background(), "SELECT @@version").Scan(&result)
+	gormDB, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return fmt.Sprintf("Database scan failed: %v", err)
+		return nil, fmt.Errorf("failed to connect to gorm: %w", err)
 	}
-	return strings.TrimSpace(result)
+
+	log.Println("✅ Connected to database successfully.")
+
+	return &SqlClient{
+		db:     sqlDB,
+		GormDB: gormDB,
+	}, nil
 }
 
-// GetDB exposes the underlying *sql.DB for direct queries if needed
+// raw *sql.DB
 func (client *SqlClient) GetDB() *sql.DB {
 	return client.db
+}
+
+// GetGormDB GORM *gorm.DB
+func (client *SqlClient) GetGormDB() *gorm.DB {
+	return client.GormDB
+}
+
+// GetDatabaseDetails
+func (client *SqlClient) GetDatabaseDetails() string {
+	var version string
+	err := client.db.QueryRow("SELECT @@version").Scan(&version)
+	if err != nil {
+		return "Error fetching DB version: " + err.Error()
+	}
+	return version
 }
