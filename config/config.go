@@ -25,6 +25,7 @@ func init() {
 	if err != nil {
 		log.Println("No .env file found, falling back to environment variables")
 	}
+
 	MODE = getEnv("MODE", "release")
 	APP_ENV = getEnv("APP_ENV", "production")
 	PORT = getEnv("PORT", "8080")
