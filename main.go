@@ -2,16 +2,20 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 	"log"
+
 	"medicine-finder-api/config"
 	"medicine-finder-api/middleware"
+	"medicine-finder-api/routes"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	addr := fmt.Sprintf("%s:%s", config.HOST, config.PORT)
 	router := gin.Default()
+
 	if err := router.SetTrustedProxies([]string{}); err != nil {
 		log.Fatalf("Failed to set trusted proxies: %v", err)
 	}
@@ -24,16 +28,7 @@ func main() {
 	}))
 
 	router.Use(middleware.ResponseInterceptor())
-
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "Hello from Go API!"})
-	})
-
-	router.GET("/example", func(c *gin.Context) {
-		result := gin.H{"message": "Hello!"}
-		c.Set("responseData", result)
-		c.JSON(200, result)
-	})
+	routes.RegisterRoutes(router)
 
 	log.Printf("Starting server on %s", addr)
 	if err := router.Run(addr); err != nil {
