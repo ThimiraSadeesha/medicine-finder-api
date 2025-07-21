@@ -18,7 +18,7 @@ func mySQLConnector(ctx context.Context, dbType, host, port, username, password,
 	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4",
 		username, password, host, port, dbName)
 
-	//log.Printf("Connecting to MySQL with DSN: %s", connectionString)
+	//log.Printf("Connecting to MySQL ")
 
 	db, err := sql.Open(dbType, connectionString)
 	if err != nil {
