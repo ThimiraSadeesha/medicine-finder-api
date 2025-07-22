@@ -27,7 +27,7 @@ func main() {
 
 	// Run migrations BEFORE starting the server
 	//migrations.Run(dbClient.GetGormDB())
-
+	//
 	addr := fmt.Sprintf("%s:%s", config.HOST, config.PORT)
 
 	if err := router.SetTrustedProxies([]string{}); err != nil {

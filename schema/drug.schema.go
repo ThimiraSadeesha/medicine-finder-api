@@ -2,7 +2,7 @@ package schema
 
 import "time"
 
-type User struct {
+type Drug struct {
 	ID        uint   `gorm:"primaryKey"`
 	Username  string `gorm:"unique;not null"`
 	Email     string `gorm:"unique;not null"`
